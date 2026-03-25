@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Termisun">
+<meta name="theme-color" content="#0a4fa6">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Termisun</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap');
+
+:root {
+  --primary:      #0a4fa6;
+  --primary-dark: #083d82;
+  --primary-light:#e8f0fb;
+  --primary-mid:  #c5d8f5;
+  --white:        #ffffff;
+  --bg:           #f0f5fd;
+  --surface:      #ffffff;
+  --surface2:     #f4f8ff;
+  --border:       #d0ddf0;
+  --text:         #0d1f3c;
+  --muted:        #6b82a8;
+  --shadow:       0 1px 4px rgba(10,79,166,.08),0 4px 16px rgba(10,79,166,.06);
+  /* status — unchanged */
+  --ok-bg:#e8f5f0; --ok-fg:#2d6a4f;
+  --low-bg:#fef9e7;--low-fg:#b5830f;
+  --no-bg:#fef0ee; --no-fg:#c0392b;
+  --ap-bg:#e8edf7; --ap-fg:#2c4fa3;
+  --danger:#c0392b; --success:#2d6a4f; --warn:#b5830f;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh}
+
+/* ── LOGIN ── */
+#login-screen{min-height:100dvh;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,var(--primary-dark),var(--primary) 55%,#1a6dde);padding:20px}
+.login-box{background:var(--white);border-radius:16px;padding:44px 32px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+.login-logo{text-align:center;margin-bottom:28px}
+.login-icon{width:64px;height:64px;border-radius:16px;background:var(--primary);display:inline-flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:var(--white);font-family:'DM Mono',monospace;margin-bottom:10px;box-shadow:0 8px 24px rgba(10,79,166,.35)}
+.login-appname{font-size:1.6rem;font-weight:700;color:var(--primary);letter-spacing:1px;display:block}
+.login-sub{font-size:.75rem;color:var(--muted);font-family:'DM Mono',monospace;display:block;margin-top:2px}
+.login-error{background:#fdf0ee;border:1px solid #f5c6bb;color:var(--danger);font-size:.78rem;padding:9px 12px;border-radius:6px;margin-bottom:14px;display:none;font-family:'DM Mono',monospace}
+
+/* ── SHELL ── */
+#app-shell{display:none;min-height:100dvh;flex-direction:column}
+#app-shell.visible{display:flex}
+header{background:var(--primary);padding:0 18px;padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:space-between;min-height:54px;box-shadow:0 2px 12px rgba(10,79,166,.3);position:sticky;top:0;z-index:100}
+.header-logo{font-family:'DM Mono',monospace;font-size:1rem;letter-spacing:2px;color:var(--white);font-weight:500}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-user{font-size:.72rem;color:rgba(255,255,255,.75);font-family:'DM Mono',monospace}
+.header-user strong{color:var(--white)}
+#clock-disp{font-family:'DM Mono',monospace;font-size:.68rem;color:rgba(255,255,255,.5)}
+.admin-tag{font-family:'DM Mono',monospace;font-size:.58rem;background:rgba(255,255,255,.2);color:var(--white);padding:2px 7px;border-radius:20px;letter-spacing:1px;border:1px solid rgba(255,255,255,.3)}
+
+main{flex:1;padding:18px 14px;max-width:900px;margin:0 auto;width:100%;overflow-y:auto}
+.section{display:none}
+.section.active{display:block}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{background:var(--white);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom);display:flex;position:sticky;bottom:0;z-index:100;box-shadow:0 -2px 12px rgba(10,79,166,.08)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px 3px;border:none;background:transparent;cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;font-size:.54rem;letter-spacing:.5px;text-transform:uppercase;transition:color .15s;min-width:0}
+.bnav-btn .icon{font-size:1.15rem;line-height:1}
+.bnav-btn.active{color:var(--primary)}
+.admin-only{display:none}
+body.is-admin .admin-only{display:flex}
+
+/* ── TYPOGRAPHY ── */
+.sec-heading{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.sec-heading::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── CARDS / GRIDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:400px){.grid3{grid-template-columns:1fr 1fr}}
+
+/* ── STAT BOXES ── */
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.stat-label{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.stat-value{font-size:1.8rem;font-weight:700;line-height:1;color:var(--primary)}
+.stat-sub{font-size:.7rem;color:var(--muted);margin-top:3px}
+
+/* ── FORMS ── */
+input,select,textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.9rem;border-radius:8px;outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(10,79,166,.12)}
+label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:4px;font-family:'DM Mono',monospace}
+.field{margin-bottom:12px}
+
+/* ── BUTTONS ── */
+.btn{font-family:'DM Mono',monospace;font-size:.72rem;font-weight:500;letter-spacing:.8px;text-transform:uppercase;padding:11px 18px;border:none;cursor:pointer;border-radius:8px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation}
+.btn-primary{background:var(--primary);color:var(--white)}
+.btn-primary:active{background:var(--primary-dark)}
+.btn-danger{background:var(--danger);color:var(--white)}
+.btn-danger:active{background:#a93226}
+.btn-warn{background:var(--warn);color:var(--white)}
+.btn-success{background:var(--success);color:var(--white)}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--muted)}
+.btn-ghost:active{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:6px 11px;font-size:.63rem;border-radius:6px}
+.btn-full{width:100%}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:1px;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);background:var(--surface2)}
+td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.5px;padding:3px 8px;border-radius:20px;font-weight:500}
+.b-ok  {background:var(--ok-bg);color:var(--ok-fg)}
+.b-low {background:var(--low-bg);color:var(--low-fg)}
+.b-no  {background:var(--no-bg);color:var(--no-fg)}
+.b-ap  {background:var(--ap-bg);color:var(--ap-fg)}
+.b-nc  {background:#f0f0f0;color:var(--muted)}
+.b-buy {background:var(--no-bg);color:var(--no-fg)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(5,20,50,.55);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:20px 18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));width:100%;max-width:520px;max-height:90dvh;overflow-y:auto;box-shadow:0 -8px 40px rgba(10,79,166,.15);animation:slideUp .22s ease}
+@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:38px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.modal-title{font-family:'DM Mono',monospace;font-size:.76rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--primary);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* ── HELPERS ── */
+.flex-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.flex-gap{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.empty-state{text-align:center;padding:32px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.74rem}
+.horas-val{font-family:'DM Mono',monospace;font-weight:500;color:var(--primary)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(72px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:var(--primary);color:var(--white);font-family:'DM Mono',monospace;font-size:.7rem;padding:10px 20px;border-radius:24px;z-index:999;opacity:0;transition:all .22s;white-space:nowrap;box-shadow:0 4px 20px rgba(10,79,166,.35);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{background:var(--danger)}
+
+/* ── PUNCH CARD ── */
+.punch-card{background:linear-gradient(135deg,var(--primary),#1a6dde);border-radius:16px;padding:24px 20px;text-align:center;color:var(--white);margin-bottom:14px;box-shadow:0 8px 24px rgba(10,79,166,.3)}
+.punch-name{font-size:1.35rem;font-weight:700;margin-bottom:3px}
+.punch-clock{font-family:'DM Mono',monospace;font-size:1.2rem;opacity:.8;margin-bottom:4px}
+.punch-date{font-family:'DM Mono',monospace;font-size:.72rem;opacity:.6;margin-bottom:20px}
+.punch-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.punch-btn{padding:14px;font-size:.76rem;border-radius:10px;font-family:'DM Mono',monospace;font-weight:500;letter-spacing:.8px;text-transform:uppercase;border:none;cursor:pointer;transition:all .15s;touch-action:manipulation}
+.punch-btn-in{background:rgba(255,255,255,.95);color:var(--success)}
+.punch-btn-in:active{background:#e8f5f0}
+.punch-btn-out{background:rgba(255,255,255,.12);color:var(--white);border:1.5px solid rgba(255,255,255,.35)}
+.punch-btn-out:active{background:rgba(255,255,255,.22)}
+.punch-status{font-family:'DM Mono',monospace;font-size:.68rem;opacity:.7;margin-top:14px;min-height:1.4em}
+
+/* ── TIMER AO VIVO ── */
+.live-timer{background:rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;margin-top:12px;font-family:'DM Mono',monospace;font-size:.78rem;display:none}
+.live-timer.show{display:block}
+.live-timer-label{opacity:.65;font-size:.62rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.live-timer-val{font-size:1.4rem;font-weight:500;letter-spacing:2px}
+
+/* ── STOCK IMG ── */
+.stock-img{width:40px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+.stock-img-ph{width:40px;height:40px;background:var(--surface2);border:1px dashed var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.95rem;cursor:pointer}
+.img-upload-area{border:2px dashed var(--border);border-radius:8px;padding:16px;text-align:center;cursor:pointer;position:relative;font-size:.78rem;color:var(--muted);font-family:'DM Mono',monospace;transition:border-color .15s}
+.img-upload-area:active{border-color:var(--primary)}
+.img-upload-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.img-preview-modal{width:100%;max-height:130px;object-fit:contain;border-radius:6px;margin-top:8px;display:none}
+
+/* ── PROGRESS ── */
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:4px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+
+/* ── CROSS CARDS ── */
+.cross-card{border-left:4px solid transparent;padding:12px 13px;background:var(--surface);border-radius:10px;border:1px solid var(--border);margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.cross-card.buy{border-left-color:var(--danger)}
+.cross-card.ok{border-left-color:var(--success)}
+.cross-info strong{display:block;margin-bottom:2px;font-size:.86rem}
+.cross-meta{font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-icon">T</div>
+      <span class="login-appname">Termisun</span>
+      <span class="login-sub">// gestão empresarial</span>
+    </div>
+    <div class="login-error" id="login-error">Utilizador ou palavra-passe incorrectos.</div>
+    <div class="field"><label>Utilizador</label><input id="l-user" placeholder="nome de utilizador" autocomplete="username" autocapitalize="none" inputmode="text"></div>
+    <div class="field"><label>Palavra-passe</label><input type="password" id="l-pass" placeholder="••••••" autocomplete="current-password"></div>
+    <button class="btn btn-primary btn-full" style="padding:14px;border-radius:10px;margin-top:4px;font-size:.82rem" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-shell">
+  <header>
+    <div class="header-logo">Termisun</div>
+    <div class="header-right">
+      <div id="clock-disp"></div>
+      <div class="header-user" id="header-user-area"></div>
+      <button class="btn btn-ghost btn-sm" style="color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.25);padding:5px 9px" onclick="doLogout()">Sair</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- PRESENÇAS -->
+    <div id="sec-presencas" class="section active">
+      <div class="punch-card">
+        <div class="punch-name" id="sr-nome">—</div>
+        <div class="punch-clock" id="sr-clock">--:--:--</div>
+        <div class="punch-date" id="sr-date">—</div>
+        <div class="punch-btns">
+          <button class="punch-btn punch-btn-in"  onclick="registarEntrada()">▶ Entrada</button>
+          <button class="punch-btn punch-btn-out" onclick="registarSaida()">■ Saída</button>
+        </div>
+        <div class="live-timer" id="live-timer">
+          <div class="live-timer-label">Tempo no turno</div>
+          <div class="live-timer-val" id="live-timer-val">0h 00m</div>
+        </div>
+        <div class="punch-status" id="sr-status">—</div>
+      </div>
+      <div class="sec-heading">Os meus registos</div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Entrada</th><th>Saída</th><th>Horas</th></tr></thead>
+            <tbody id="meus-registos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN PRESENÇAS -->
+    <div id="sec-admin-p" class="section">
+      <div class="sec-heading">Gestão de Presenças</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="stat-box"><div class="stat-label">Presentes hoje</div><div class="stat-value" id="ap-presentes" style="color:var(--success)">0</div></div>
+        <div class="stat-box"><div class="stat-label">Saídas hoje</div><div class="stat-value" id="ap-saidas" style="color:var(--danger)">0</div></div>
+        <div class="stat-box"><div class="stat-label">Total registos</div><div class="stat-value" id="ap-total">0</div></div>
+        <div class="stat-box"><div class="stat-label">Média horas/dia</div><div class="stat-value" id="ap-media" style="font-size:1.2rem">—</div></div>
+      </div>
+      <div class="flex-between">
+        <div class="flex-gap">
+          <input id="filtro-pnome" placeholder="Filtrar nome…" style="max-width:150px;font-size:.82rem" oninput="renderAdminP()">
+          <input type="date" id="filtro-pdata" style="max-width:145px;font-size:.82rem" oninput="renderAdminP()">
+        </div>
+        <div class="flex-gap">
+          <button class="btn btn-ghost btn-sm" onclick="exportCSVPresencas()">↓ CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-addp')">+ Registo</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Funcionário</th><th>Data</th><th>Entrada</th><th>Saída</th><th>Horas</th><th></th></tr></thead>
+            <tbody id="tab-admin-p"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATERIAL -->
+    <div id="sec-material" class="section">
+      <div class="sec-heading">Pedidos de Material</div>
+      <div class="flex-between">
+        <select id="filtro-mat" style="max-width:155px;font-size:.82rem" onchange="renderMaterial()">
+          <option value="">Todos</option>
+          <option value="pendente">Pendente</option>
+          <option value="aprovado">Aprovado</option>
+          <option value="entregue">Entregue</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-material')">+ Pedido</button>
+      </div>
+      <div class="card" style="padding:0;margin-top:10px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Material</th><th>Qtd</th><th>Stock</th><th>Situação</th><th>Por</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tab-material"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOCK -->
+    <div id="sec-stock" class="section">
+      <div class="sec-heading">Stock em Armazém</div>
+      <div class="grid3" style="margin-bottom:12px">
+        <div class="stat-box"><div class="stat-label">Itens</div><div class="stat-value" id="st-total">0</div></div>
+        <div class="stat-box"><div class="stat-label">Stock baixo</div><div class="stat-value" id="st-baixo" style="color:var(--warn)">0</div></div>
+        <div class="stat-box"><div class="stat-label">Sem stock</div><div class="stat-value" id="st-zero" style="color:var(--danger)">0</div></div>
+      </div>
+      <div class="flex-between">
+        <input id="filtro-stock" placeholder="Pesquisar…" style="max-width:200px;font-size:.82rem" oninput="renderStock()">
+        <button class="btn btn-primary btn-sm" onclick="abrirModalStock(null)">+ Item</button>
+      </div>
+      <div class="card" style="padding:0;margin-top:10px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Img</th><th>Nome</th><th>Cat.</th><th>Qtd</th><th>Mín.</th><th>Nível</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="tab-stock"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPRAS -->
+    <div id="sec-compras" class="section">
+      <div class="sec-heading">Lista de Compras</div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="stat-box"><div class="stat-label">A comprar</div><div class="stat-value" id="c-comprar" style="color:var(--danger)">0</div></div>
+        <div class="stat-box"><div class="stat-label">Cobertos</div><div class="stat-value" id="c-cobertos" style="color:var(--success)">0</div></div>
+      </div>
+      <div class="flex-between"><div></div>
+        <button class="btn btn-ghost btn-sm" onclick="exportCSVCompras()">↓ Exportar CSV</button>
+      </div>
+      <div class="sec-heading" style="margin-top:4px">Precisam de compra</div>
+      <div id="lista-comprar"></div>
+      <div class="sec-heading" style="margin-top:10px">Cobertos pelo stock</div>
+      <div id="lista-cobertos"></div>
+      <div class="sec-heading" style="margin-top:10px">Stock abaixo do mínimo (sem pedido)</div>
+      <div id="lista-stock-baixo"></div>
+    </div>
+
+    <!-- UTILIZADORES -->
+    <div id="sec-utilizadores" class="section">
+      <div class="sec-heading">Utilizadores</div>
+      <div class="flex-between"><div></div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-user')">+ Novo</button>
+      </div>
+      <div class="card" style="padding:0;margin-top:10px">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Username</th><th>Depto.</th><th>Acesso</th><th></th></tr></thead>
+            <tbody id="tab-users"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="bnav-btn active" onclick="showSection('presencas',this)"><span class="icon">🕐</span>Presenças</button>
+    <button class="bnav-btn admin-only" onclick="showSection('admin-p',this)"><span class="icon">📋</span>Gestão</button>
+    <button class="bnav-btn admin-only" onclick="showSection('material',this)"><span class="icon">📦</span>Material</button>
+    <button class="bnav-btn admin-only" onclick="showSection('stock',this)"><span class="icon">🏪</span>Stock</button>
+    <button class="bnav-btn admin-only" onclick="showSection('compras',this)"><span class="icon">🛒</span>Compras</button>
+    <button class="bnav-btn admin-only" onclick="showSection('utilizadores',this)"><span class="icon">👥</span>Users</button>
+  </nav>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-user">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Novo Utilizador</div>
+    <div class="field"><label>Nome completo</label><input id="u-nome" placeholder="Ana Silva"></div>
+    <div class="field"><label>Username</label><input id="u-user" placeholder="ana.silva" autocapitalize="none" inputmode="text"></div>
+    <div class="field"><label>Palavra-passe</label><input type="password" id="u-pass" placeholder="mínimo 4 caracteres"></div>
+    <div class="grid2">
+      <div class="field"><label>Departamento</label><input id="u-dept" placeholder="Logística"></div>
+      <div class="field"><label>Cargo</label><input id="u-cargo" placeholder="Operador"></div>
+    </div>
+    <div class="field"><label>Tipo de acesso</label>
+      <select id="u-tipo"><option value="funcionario">Funcionário</option><option value="admin">Administrador</option></select>
+    </div>
+    <div class="flex-gap" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="addUser()">Guardar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-user')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-addp">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Adicionar Registo de Presença</div>
+    <div class="field"><label>Funcionário</label><select id="ap-func"></select></div>
+    <div class="grid2">
+      <div class="field"><label>Data</label><input type="date" id="ap-data"></div>
+      <div class="field"><label>Tipo</label><select id="ap-tipo"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></div>
+    </div>
+    <div class="field"><label>Hora</label><input type="time" id="ap-hora"></div>
+    <div class="flex-gap" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="addPresencaAdmin()">Guardar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-addp')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-material">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Novo Pedido de Material</div>
+    <div class="field"><label>Material</label><input id="m-nome" placeholder="Ex: Luvas de proteção"></div>
+    <div class="field"><label>Quantidade</label><input type="number" id="m-qtd" min="1" value="1" inputmode="numeric"></div>
+    <div class="field"><label>Solicitado por</label><input id="m-por" placeholder="Nome ou departamento"></div>
+    <div class="field"><label>Notas</label><textarea id="m-notas" rows="2" placeholder="Urgente, referência, etc."></textarea></div>
+    <div class="flex-gap" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="addMaterial()">Enviar Pedido</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-material')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-stock">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-stock-title">Adicionar Item</div>
+    <input type="hidden" id="s-id">
+    <div class="field"><label>Nome do material</label><input id="s-nome" placeholder="Ex: Capacete de segurança"></div>
+    <div class="field"><label>Categoria</label><input id="s-cat" placeholder="EPI, Ferramentas, Consumíveis…"></div>
+    <div class="grid2">
+      <div class="field"><label>Quantidade actual</label><input type="number" id="s-qtd" min="0" value="0" inputmode="numeric"></div>
+      <div class="field"><label>Quantidade mínima</label><input type="number" id="s-min" min="0" value="1" inputmode="numeric"></div>
+    </div>
+    <div class="field">
+      <label>Imagem</label>
+      <div class="img-upload-area" onclick="document.getElementById('s-img-file').click()">
+        <input type="file" id="s-img-file" accept="image/*" capture="environment" onchange="previewImg(event)">
+        <div id="s-img-hint">📷 Toque para adicionar imagem</div>
+        <img id="s-img-preview" class="img-preview-modal">
+      </div>
+    </div>
+    <div class="flex-gap" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveStock()">Guardar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-stock')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ajuste">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Ajustar Quantidade</div>
+    <input type="hidden" id="aj-id">
+    <div id="aj-nome" style="font-size:1rem;font-weight:700;margin-bottom:12px;color:var(--primary)"></div>
+    <div class="field"><label>Nova quantidade</label><input type="number" id="aj-qtd" min="0" inputmode="numeric"></div>
+    <div class="flex-gap" style="margin-top:14px">
+      <button class="btn btn-primary" onclick="saveAjuste()">Confirmar</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-ajuste')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  STORAGE — chave fixa, nunca muda
+//  Os dados vivem SEMPRE nesta chave no localStorage
+// ══════════════════════════════════════════
+const STORE_KEY = 'termisun_data_v1';
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  // Estado inicial apenas se nunca existiu
+  return {
+    users: [{ id:1, nome:'Administrador', username:'admin', pass:'admin1234', dept:'Gestão', cargo:'Admin', tipo:'admin' }],
+    presencas: [],
+    materiais: [],
+    stock: [],
+    _id: 10
+  };
+}
+
+let S = loadState();
+let CU = null; // utilizador da sessão actual
+
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) { toast('Erro ao guardar dados',true); }
+}
+function nid() { return ++S._id; }
+
+// ══════════════════════════════════════════
+//  SESSÃO — persiste no sessionStorage
+//  Assim ao recarregar a página o login mantém-se
+//  mas ao fechar o browser/tab limpa automaticamente
+// ══════════════════════════════════════════
+function saveSession(user) {
+  try { sessionStorage.setItem('termisun_session', JSON.stringify({ id: user.id })); } catch(e) {}
+}
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem('termisun_session');
+    if (!raw) return null;
+    const { id } = JSON.parse(raw);
+    // Recarrega S para garantir dados frescos
+    S = loadState();
+    return S.users.find(u => u.id === id) || null;
+  } catch(e) { return null; }
+}
+function clearSession() {
+  try { sessionStorage.removeItem('termisun_session'); } catch(e) {}
+}
+
+// ══════════════════════════════════════════
+//  PWA
+// ══════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
+// ══════════════════════════════════════════
+//  RELÓGIO
+// ══════════════════════════════════════════
+setInterval(() => {
+  const n = new Date();
+  const s = n.toLocaleDateString('pt-PT') + '  ' + n.toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const el = document.getElementById('clock-disp'); if (el) el.textContent = s;
+  const sr = document.getElementById('sr-clock');   if (sr) sr.textContent = n.toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const sd = document.getElementById('sr-date');    if (sd) sd.textContent = n.toLocaleDateString('pt-PT', { weekday:'long', day:'numeric', month:'long' });
+  updateLiveTimer();
+}, 1000);
+
+// ══════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════
+const todayPT  = () => new Date().toLocaleDateString('pt-PT');
+const todayISO = () => new Date().toISOString().split('T')[0];
+const timeNow  = () => new Date().toLocaleTimeString('pt-PT', { hour:'2-digit', minute:'2-digit' });
+const tsNow    = () => Date.now(); // timestamp em ms — base de todas as horas
+
+const pt2iso = d => { if (!d) return ''; const p = d.split('/'); return p.length===3 ? `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}` : d; };
+const iso2pt = d => { if (!d) return ''; const p = d.split('-'); return p.length===3 ? `${p[2]}/${p[1]}/${p[0]}` : d; };
+
+// Calcula horas a partir de timestamps (ms) — subtrai 1h almoço
+function calcHorasTs(tsEnt, tsSai) {
+  if (!tsEnt || !tsSai) return null;
+  let mins = Math.round((tsSai - tsEnt) / 60000) - 60;
+  if (mins <= 0) return null;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h + 'h' + (m ? String(m).padStart(2,'0') + 'm' : '');
+}
+
+// Calcula horas a partir de strings "HH:MM" — fallback para registos antigos
+function calcHorasStr(ent, sai) {
+  if (!ent || !sai) return null;
+  const [eh,em] = ent.split(':').map(Number), [sh,sm] = sai.split(':').map(Number);
+  let mins = (sh*60+sm) - (eh*60+em) - 60;
+  return mins > 0 ? Math.floor(mins/60) + 'h' + (mins%60 ? String(mins%60).padStart(2,'0')+'m' : '') : null;
+}
+
+function horasRegisto(r) {
+  // Usa timestamps se disponíveis, senão usa strings de hora
+  if (r.tsEnt && r.tsSai) return calcHorasTs(r.tsEnt, r.tsSai);
+  if (r.entrada && r.saida) return calcHorasStr(r.entrada, r.saida);
+  return null;
+}
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (err ? ' err' : '');
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function openModal(id) {
+  if (id === 'modal-addp') {
+    document.getElementById('ap-func').innerHTML = S.users.map(u => `<option value="${u.id}">${u.nome}</option>`).join('');
+    document.getElementById('ap-data').value = todayISO();
+    document.getElementById('ap-hora').value = timeNow();
+  }
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+document.addEventListener('keydown', e => { if (e.key==='Enter' && document.getElementById('login-screen').style.display!=='none') doLogin(); });
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id==='presencas')    { renderMeusRegistos(); updatePunchStatus(); }
+  if (id==='admin-p')      renderAdminP();
+  if (id==='material')     renderMaterial();
+  if (id==='stock')        renderStock();
+  if (id==='compras')      renderCompras();
+  if (id==='utilizadores') renderUsers();
+}
+
+// ══════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ══════════════════════════════════════════
+function iniciarApp(user) {
+  CU = user;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+  document.getElementById('header-user-area').innerHTML =
+    `<strong>${user.nome}</strong>${user.tipo==='admin' ? ' <span class="admin-tag">ADMIN</span>' : ''}`;
+  document.body.classList.toggle('is-admin', user.tipo==='admin');
+  document.getElementById('sr-nome').textContent = user.nome;
+  saveSession(user);
+  renderMeusRegistos();
+  updatePunchStatus();
+}
+
+function doLogin() {
+  const u = document.getElementById('l-user').value.trim().toLowerCase();
+  const p = document.getElementById('l-pass').value;
+  // Recarrega dados frescos antes de validar
+  S = loadState();
+  const found = S.users.find(x => x.username.toLowerCase()===u && x.pass===p);
+  if (!found) { document.getElementById('login-error').style.display='block'; return; }
+  document.getElementById('login-error').style.display='none';
+  iniciarApp(found);
+}
+
+function doLogout() {
+  CU = null;
+  clearSession();
+  document.body.classList.remove('is-admin');
+  document.getElementById('app-shell').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-pass').value = '';
+  document.getElementById('l-user').value = '';
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-presencas').classList.add('active');
+  document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn')[0].classList.add('active');
+}
+
+// ══════════════════════════════════════════
+//  TIMER AO VIVO
+// ══════════════════════════════════════════
+function updateLiveTimer() {
+  if (!CU) return;
+  const d = todayPT();
+  const byDay = presencasPorDia().find(r => r.userId===CU.id && r.data===d);
+  const timer = document.getElementById('live-timer');
+  const val   = document.getElementById('live-timer-val');
+  if (byDay && byDay.tsEnt && !byDay.tsSai) {
+    // Está dentro do turno — mostra tempo decorrido
+    timer.classList.add('show');
+    let mins = Math.round((Date.now() - byDay.tsEnt) / 60000);
+    const h = Math.floor(mins/60), m = mins%60;
+    val.textContent = h + 'h ' + String(m).padStart(2,'0') + 'm';
+  } else {
+    timer.classList.remove('show');
+  }
+}
+
+function updatePunchStatus() {
+  if (!CU) return;
+  const d = todayPT();
+  const byDay = presencasPorDia().find(r => r.userId===CU.id && r.data===d);
+  const el = document.getElementById('sr-status');
+  if (!byDay) { el.textContent = 'Sem registo hoje.'; return; }
+  if (byDay.entrada && !byDay.saida) {
+    el.textContent = 'Entrada às ' + byDay.entrada + ' — turno em curso';
+  } else if (byDay.entrada && byDay.saida) {
+    const h = horasRegisto(byDay) || '—';
+    el.textContent = 'Entrada ' + byDay.entrada + ' · Saída ' + byDay.saida + ' · ' + h;
+  }
+}
+
+// ══════════════════════════════════════════
+//  PRESENÇAS — self register
+// ══════════════════════════════════════════
+function registarEntrada() {
+  const d = todayPT();
+  const pDia = presencasPorDia().find(r => r.userId===CU.id && r.data===d);
+  if (pDia && pDia.entrada && !pDia.saida) { toast('Entrada já registada hoje!', true); return; }
+  const ts = tsNow();
+  S.presencas.push({ id:nid(), userId:CU.id, nome:CU.nome, data:d, tipo:'entrada', hora:timeNow(), ts });
+  save(); renderMeusRegistos(); updatePunchStatus(); updateLiveTimer();
+  toast('Entrada registada — ' + timeNow());
+}
+
+function registarSaida() {
+  const d = todayPT();
+  const pDia = presencasPorDia().find(r => r.userId===CU.id && r.data===d);
+  if (!pDia || !pDia.entrada) { toast('Registe primeiro a entrada!', true); return; }
+  if (pDia.saida) { toast('Saída já registada hoje!', true); return; }
+  const ts = tsNow();
+  // Encontra o registo de entrada para guardar tsEnt no de saída também
+  const entReg = S.presencas.find(p => p.userId===CU.id && p.data===d && p.tipo==='entrada');
+  S.presencas.push({ id:nid(), userId:CU.id, nome:CU.nome, data:d, tipo:'saida', hora:timeNow(), ts, tsEnt: entReg?.ts });
+  save(); renderMeusRegistos(); updatePunchStatus(); updateLiveTimer();
+  toast('Saída registada — ' + timeNow());
+}
+
+function renderMeusRegistos() {
+  if (!CU) return;
+  const rows = presencasPorDia().filter(r => r.userId===CU.id).sort((a,b) => pt2iso(b.data).localeCompare(pt2iso(a.data)));
+  const tb = document.getElementById('meus-registos');
+  if (!rows.length) { tb.innerHTML='<tr><td colspan="4"><div class="empty-state">Sem registos ainda.</div></td></tr>'; return; }
+  tb.innerHTML = rows.map(r => {
+    const h = horasRegisto(r) || '—';
+    return `<tr>
+      <td style="font-size:.76rem">${r.data}</td>
+      <td>${r.entrada||'—'}</td>
+      <td>${r.saida||'—'}</td>
+      <td class="horas-val">${h}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  ADMIN PRESENÇAS
+// ══════════════════════════════════════════
+function presencasPorDia() {
+  const m = {};
+  S.presencas.forEach(p => {
+    const k = p.userId+'|'+p.data;
+    if (!m[k]) m[k] = { nome:p.nome, data:p.data, userId:p.userId, ids:[] };
+    m[k][p.tipo] = p.hora;
+    if (p.tipo==='entrada' && p.ts) m[k].tsEnt = p.ts;
+    if (p.tipo==='saida'   && p.ts) m[k].tsSai = p.ts;
+    m[k].ids.push(p.id);
+  });
+  return Object.values(m);
+}
+
+function addPresencaAdmin() {
+  const uid  = parseInt(document.getElementById('ap-func').value);
+  const u    = S.users.find(x => x.id===uid);
+  const dISO = document.getElementById('ap-data').value;
+  const tipo = document.getElementById('ap-tipo').value;
+  const hora = document.getElementById('ap-hora').value;
+  if (!u||!dISO||!hora) { toast('Preencha todos os campos', true); return; }
+  S.presencas.push({ id:nid(), userId:u.id, nome:u.nome, data:iso2pt(dISO), tipo, hora });
+  save(); closeModal('modal-addp'); renderAdminP(); toast('Registo adicionado ✓');
+}
+
+function delPresGrupo(ids) {
+  const arr = ids.split(',').map(Number);
+  S.presencas = S.presencas.filter(p => !arr.includes(p.id));
+  save(); renderAdminP();
+}
+
+function renderAdminP() {
+  const fNome = (document.getElementById('filtro-pnome').value||'').toLowerCase();
+  const fData = document.getElementById('filtro-pdata').value;
+  let rows = presencasPorDia();
+  if (fNome) rows = rows.filter(r => r.nome.toLowerCase().includes(fNome));
+  if (fData) { const pt=iso2pt(fData); rows=rows.filter(r=>r.data===pt); }
+  rows.sort((a,b) => pt2iso(b.data).localeCompare(pt2iso(a.data)));
+
+  const all = presencasPorDia(), td = todayPT();
+  document.getElementById('ap-presentes').textContent = all.filter(r=>r.data===td&&r.entrada&&!r.saida).length;
+  document.getElementById('ap-saidas').textContent    = all.filter(r=>r.data===td&&r.saida).length;
+  document.getElementById('ap-total').textContent     = S.presencas.length;
+
+  const comH = all.filter(r => r.entrada && r.saida);
+  if (comH.length) {
+    const tot = comH.reduce((acc,r) => {
+      const h = horasRegisto(r);
+      if (!h) return acc;
+      const match = h.match(/(\d+)h(?:(\d+)m)?/);
+      return acc + (match ? parseInt(match[1])*60+(parseInt(match[2])||0) : 0);
+    }, 0);
+    const avg = Math.round(tot/comH.length);
+    document.getElementById('ap-media').textContent = Math.floor(avg/60)+'h'+(avg%60?avg%60+'m':'');
+  } else document.getElementById('ap-media').textContent = '—';
+
+  const tb = document.getElementById('tab-admin-p');
+  if (!rows.length) { tb.innerHTML='<tr><td colspan="6"><div class="empty-state">Sem registos.</div></td></tr>'; return; }
+  tb.innerHTML = rows.map(r => `<tr>
+    <td><strong>${r.nome}</strong></td>
+    <td style="font-size:.76rem">${r.data}</td>
+    <td>${r.entrada||'—'}</td>
+    <td>${r.saida||'—'}</td>
+    <td class="horas-val">${horasRegisto(r)||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delPresGrupo('${r.ids.join(',')}')">✕</button></td>
+  </tr>`).join('');
+}
+
+function exportCSVPresencas() {
+  let csv = 'Nome,Data,Entrada,Saida,Horas Trabalhadas\n';
+  presencasPorDia()
+    .sort((a,b) => pt2iso(b.data).localeCompare(pt2iso(a.data)))
+    .forEach(r => {
+      const h = horasRegisto(r)||'';
+      csv += `"${r.nome}","${r.data}","${r.entrada||''}","${r.saida||''}","${h}"\n`;
+    });
+  dlCSV(csv, 'termisun-presencas.csv'); toast('CSV exportado ✓');
+}
+
+// ══════════════════════════════════════════
+//  MATERIAL
+// ══════════════════════════════════════════
+const stockMatch = n => S.stock.find(s => s.nome.toLowerCase().includes(n.toLowerCase()) || n.toLowerCase().includes(s.nome.toLowerCase())) || null;
+
+function addMaterial() {
+  const nome  = document.getElementById('m-nome').value.trim();
+  const qtd   = parseInt(document.getElementById('m-qtd').value)||1;
+  const por   = document.getElementById('m-por').value.trim()||'—';
+  const notas = document.getElementById('m-notas').value.trim();
+  if (!nome) { toast('Indique o material!', true); return; }
+  S.materiais.unshift({ id:nid(), nome, qtd, por, notas, estado:'pendente', data:todayPT() });
+  save(); closeModal('modal-material');
+  ['m-nome','m-por','m-notas'].forEach(x => document.getElementById(x).value='');
+  document.getElementById('m-qtd').value='1';
+  renderMaterial(); toast('Pedido registado ✓');
+}
+
+function setEstado(id,v) { const m=S.materiais.find(x=>x.id===id); if(m){m.estado=v;save();renderMaterial();} }
+function delMat(id) { S.materiais=S.materiais.filter(x=>x.id!==id); save(); renderMaterial(); }
+
+function renderMaterial() {
+  const f = document.getElementById('filtro-mat').value;
+  const lista = f ? S.materiais.filter(m=>m.estado===f) : S.materiais;
+  const tb = document.getElementById('tab-material');
+  if (!lista.length) { tb.innerHTML='<tr><td colspan="7"><div class="empty-state">Sem pedidos.</div></td></tr>'; return; }
+  tb.innerHTML = lista.map(m => {
+    const si  = stockMatch(m.nome);
+    const sit = !si ? '<span class="badge b-nc">não catalogado</span>'
+              : si.qtd>=m.qtd ? '<span class="badge b-ok">✓ stock ok</span>'
+              : '<span class="badge b-buy">⚠ comprar</span>';
+    return `<tr>
+      <td><strong>${m.nome}</strong></td>
+      <td>${m.qtd}</td>
+      <td><strong>${si?si.qtd:'—'}</strong></td>
+      <td>${sit}</td>
+      <td style="font-size:.76rem">${m.por}</td>
+      <td><select onchange="setEstado(${m.id},this.value)" style="font-size:.7rem;padding:4px 6px;border-radius:6px;width:auto">
+        <option value="pendente" ${m.estado==='pendente'?'selected':''}>pendente</option>
+        <option value="aprovado" ${m.estado==='aprovado'?'selected':''}>aprovado</option>
+        <option value="entregue" ${m.estado==='entregue'?'selected':''}>entregue</option>
+      </select></td>
+      <td><button class="btn btn-danger btn-sm" onclick="delMat(${m.id})">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  STOCK
+// ══════════════════════════════════════════
+let imgData = null;
+
+function previewImg(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload = ev => { imgData=ev.target.result; const p=document.getElementById('s-img-preview'); p.src=imgData; p.style.display='block'; document.getElementById('s-img-hint').style.display='none'; };
+  r.readAsDataURL(f);
+}
+
+function abrirModalStock(id) {
+  imgData=null;
+  document.getElementById('s-id').value=id||'';
+  document.getElementById('modal-stock-title').textContent=id?'Editar Item':'Adicionar Item';
+  if (id) {
+    const item=S.stock.find(s=>s.id===id);
+    document.getElementById('s-nome').value=item.nome;
+    document.getElementById('s-cat').value=item.cat||'';
+    document.getElementById('s-qtd').value=item.qtd;
+    document.getElementById('s-min').value=item.min;
+    if (item.img){ imgData=item.img; document.getElementById('s-img-preview').src=item.img; document.getElementById('s-img-preview').style.display='block'; document.getElementById('s-img-hint').style.display='none'; }
+    else { document.getElementById('s-img-preview').style.display='none'; document.getElementById('s-img-hint').style.display='block'; }
+  } else {
+    ['s-nome','s-cat'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('s-qtd').value='0'; document.getElementById('s-min').value='1';
+    document.getElementById('s-img-preview').style.display='none'; document.getElementById('s-img-hint').style.display='block';
+  }
+  openModal('modal-stock');
+}
+
+function saveStock() {
+  const id   = document.getElementById('s-id').value;
+  const nome = document.getElementById('s-nome').value.trim();
+  const cat  = document.getElementById('s-cat').value.trim();
+  const qtd  = parseInt(document.getElementById('s-qtd').value)||0;
+  const min  = parseInt(document.getElementById('s-min').value)||1;
+  if (!nome) { toast('Indique o nome!', true); return; }
+  if (id) { const item=S.stock.find(s=>s.id==id); if(item){item.nome=nome;item.cat=cat;item.qtd=qtd;item.min=min;if(imgData)item.img=imgData;} }
+  else S.stock.push({ id:nid(), nome, cat, qtd, min, img:imgData });
+  save(); closeModal('modal-stock'); imgData=null; renderStock(); toast('Item guardado ✓');
+}
+
+function abrirAjuste(id) {
+  const item=S.stock.find(s=>s.id===id);
+  document.getElementById('aj-id').value=id; document.getElementById('aj-nome').textContent=item.nome; document.getElementById('aj-qtd').value=item.qtd;
+  openModal('modal-ajuste');
+}
+function saveAjuste() {
+  const id=parseInt(document.getElementById('aj-id').value);
+  const qtd=parseInt(document.getElementById('aj-qtd').value)||0;
+  const item=S.stock.find(s=>s.id===id); if(item){item.qtd=qtd;save();renderStock();}
+  closeModal('modal-ajuste'); toast('Quantidade actualizada ✓');
+}
+function delStock(id) { S.stock=S.stock.filter(s=>s.id!==id); save(); renderStock(); }
+
+function renderStock() {
+  const f=(document.getElementById('filtro-stock').value||'').toLowerCase();
+  const lista=f?S.stock.filter(s=>s.nome.toLowerCase().includes(f)||(s.cat||'').toLowerCase().includes(f)):S.stock;
+  document.getElementById('st-total').textContent=S.stock.length;
+  document.getElementById('st-baixo').textContent=S.stock.filter(s=>s.qtd>0&&s.qtd<s.min).length;
+  document.getElementById('st-zero').textContent=S.stock.filter(s=>s.qtd===0).length;
+  const tb=document.getElementById('tab-stock');
+  if (!lista.length) { tb.innerHTML='<tr><td colspan="8"><div class="empty-state">Sem items no armazém.</div></td></tr>'; return; }
+  tb.innerHTML=lista.map(s=>{
+    const pct=s.min>0?Math.min(100,Math.round(s.qtd/s.min*100)):100;
+    const bc=s.qtd===0?'var(--danger)':s.qtd<s.min?'var(--warn)':'var(--success)';
+    const badge=s.qtd===0?'<span class="badge b-no">sem stock</span>':s.qtd<s.min?'<span class="badge b-low">stock baixo</span>':'<span class="badge b-ok">ok</span>';
+    const img=s.img?`<img src="${s.img}" class="stock-img">`:`<div class="stock-img-ph" onclick="abrirModalStock(${s.id})">📦</div>`;
+    return `<tr>
+      <td>${img}</td><td><strong>${s.nome}</strong></td>
+      <td style="color:var(--muted);font-size:.76rem">${s.cat||'—'}</td>
+      <td><strong>${s.qtd}</strong></td><td style="color:var(--muted)">${s.min}</td>
+      <td style="min-width:68px"><div style="font-size:.6rem;color:var(--muted)">${pct}%</div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${bc}"></div></div></td>
+      <td>${badge}</td>
+      <td><div class="flex-gap">
+        <button class="btn btn-warn btn-sm" onclick="abrirAjuste(${s.id})">Qtd</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalStock(${s.id})">✎</button>
+        <button class="btn btn-danger btn-sm" onclick="delStock(${s.id})">✕</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  COMPRAS
+// ══════════════════════════════════════════
+function renderCompras() {
+  const ativos=S.materiais.filter(m=>m.estado==='pendente'||m.estado==='aprovado');
+  const comprar=[], cobertos=[];
+  ativos.forEach(m=>{ const si=stockMatch(m.nome); (si&&si.qtd>=m.qtd?cobertos:comprar).push({m,si}); });
+  const stockBaixo=S.stock.filter(s=>{ if(s.qtd>=s.min) return false; return !ativos.some(m=>m.nome.toLowerCase().includes(s.nome.toLowerCase())||s.nome.toLowerCase().includes(m.nome.toLowerCase())); });
+  document.getElementById('c-comprar').textContent=comprar.length;
+  document.getElementById('c-cobertos').textContent=cobertos.length;
+
+  document.getElementById('lista-comprar').innerHTML=!comprar.length?'<div class="empty-state">Nenhum pedido em falta.</div>':
+    comprar.map(({m,si})=>`<div class="cross-card buy">
+      <div class="cross-info"><strong>${m.nome}</strong>
+        <div class="cross-meta">Pedido: ${m.qtd} · Stock: ${si?si.qtd:'não catalogado'} · <span style="color:var(--danger);font-weight:600">Comprar: ${si?m.qtd-si.qtd+' unid':'completo'}</span></div>
+        <div class="cross-meta">Por: ${m.por} · ${m.data}</div>
+      </div><span class="badge b-buy">⚠ comprar</span>
+    </div>`).join('');
+
+  document.getElementById('lista-cobertos').innerHTML=!cobertos.length?'<div class="empty-state">Nenhum pedido coberto.</div>':
+    cobertos.map(({m,si})=>`<div class="cross-card ok">
+      <div class="cross-info"><strong>${m.nome}</strong>
+        <div class="cross-meta">Pedido: ${m.qtd} · Stock: ${si.qtd} · <span style="color:var(--success)">Após entrega: ${si.qtd-m.qtd} unid</span></div>
+        <div class="cross-meta">Por: ${m.por} · ${m.data}</div>
+      </div><span class="badge b-ok">✓ coberto</span>
+    </div>`).join('');
+
+  document.getElementById('lista-stock-baixo').innerHTML=!stockBaixo.length?'<div class="empty-state">Nenhum item abaixo do mínimo sem pedido.</div>':
+    stockBaixo.map(s=>`<div class="cross-card buy">
+      <div class="cross-info"><strong>${s.nome}</strong>
+        <div class="cross-meta">Stock: ${s.qtd} · Mínimo: ${s.min} · <span style="color:var(--danger);font-weight:600">Repor: ${s.min-s.qtd} unid</span></div>
+        ${s.cat?`<div class="cross-meta">Categoria: ${s.cat}</div>`:''}
+      </div><span class="badge b-buy">repor</span>
+    </div>`).join('');
+}
+
+function exportCSVCompras() {
+  const ativos=S.materiais.filter(m=>m.estado==='pendente'||m.estado==='aprovado');
+  let csv='Material,Qtd Pedida,Stock Actual,Qtd a Comprar,Solicitado Por,Data,Situacao\n';
+  ativos.forEach(m=>{ const si=stockMatch(m.nome),sq=si?si.qtd:0,f=Math.max(0,m.qtd-sq); csv+=`"${m.nome}",${m.qtd},${sq},${f},"${m.por}","${m.data}","${si&&si.qtd>=m.qtd?'stock ok':'comprar'}"\n`; });
+  S.stock.filter(s=>s.qtd<s.min).forEach(s=>{ if(!ativos.some(m=>m.nome.toLowerCase().includes(s.nome.toLowerCase())||s.nome.toLowerCase().includes(m.nome.toLowerCase()))) csv+=`"${s.nome}",,${s.qtd},${s.min-s.qtd},"repor stock",,repor stock\n`; });
+  dlCSV(csv,'termisun-compras.csv'); toast('Lista exportada ✓');
+}
+
+// ══════════════════════════════════════════
+//  UTILIZADORES
+// ══════════════════════════════════════════
+function addUser() {
+  const nome=document.getElementById('u-nome').value.trim();
+  const username=document.getElementById('u-user').value.trim().toLowerCase();
+  const pass=document.getElementById('u-pass').value;
+  const dept=document.getElementById('u-dept').value.trim();
+  const cargo=document.getElementById('u-cargo').value.trim();
+  const tipo=document.getElementById('u-tipo').value;
+  if (!nome||!username||!pass) { toast('Nome, utilizador e palavra-passe são obrigatórios',true); return; }
+  if (pass.length<4) { toast('Palavra-passe mínimo 4 caracteres',true); return; }
+  if (S.users.find(u=>u.username===username)) { toast('Username já existe!',true); return; }
+  S.users.push({ id:nid(), nome, username, pass, dept, cargo, tipo });
+  save(); closeModal('modal-user');
+  ['u-nome','u-user','u-pass','u-dept','u-cargo'].forEach(x=>document.getElementById(x).value='');
+  renderUsers(); toast('Utilizador criado ✓');
+}
+
+function delUser(id) {
+  if (id===CU.id) { toast('Não pode apagar o seu próprio utilizador!',true); return; }
+  S.users=S.users.filter(u=>u.id!==id); save(); renderUsers();
+}
+
+function renderUsers() {
+  document.getElementById('tab-users').innerHTML=S.users.map(u=>`<tr>
+    <td><strong>${u.nome}</strong></td>
+    <td style="font-family:'DM Mono',monospace;font-size:.76rem">${u.username}</td>
+    <td style="font-size:.8rem">${u.dept||'—'}</td>
+    <td>${u.tipo==='admin'?'<span class="admin-tag" style="background:var(--primary)">ADMIN</span>':'Funcionário'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delUser(${u.id})">✕</button></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  CSV
+// ══════════════════════════════════════════
+function dlCSV(csv,name) {
+  const b=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=name; a.click(); URL.revokeObjectURL(u);
+}
+
+// ══════════════════════════════════════════
+//  ARRANQUE — verifica sessão guardada
+// ══════════════════════════════════════════
+(function init() {
+  document.getElementById('login-screen').style.display = 'flex';
+  // Tenta recuperar sessão anterior (mantém login ao recarregar a página)
+  const savedUser = loadSession();
+  if (savedUser) {
+    iniciarApp(savedUser);
+  }
+})();
+</script>
+</body>
+</html>
